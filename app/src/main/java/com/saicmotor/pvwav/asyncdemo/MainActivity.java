@@ -4,10 +4,13 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModel;
+import androidx.lifecycle.ViewModelProvider;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.TimeUnit;
@@ -26,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
 
     private final String HANDLER_KEY = "handler_key";
     private final int COUNT_DOWN_TIME = 5;
+    private MainViewModel viewModel;
 
     @BindView(R.id.textView)
     TextView textView;
@@ -35,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
     Button asynctaskBtn;
     @BindView(R.id.rxjava_btn)
     Button rxjavaBtn;
+    @BindView(R.id.coroutine_btn)
+    Button coroutineBtn;
 
     MyHandler myHandler = new MyHandler(this);
     MyAsyncTask myAsyncTask;
@@ -44,9 +50,16 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        viewModel = new ViewModelProvider(this).get(MainViewModel.class);
+        viewModel.getTitleLiveData().observe(this, s -> {
+            textView.setText(s);
+        });
+        viewModel.getBtnClickableLiveData().observe(this, clickable -> {
+            coroutineBtn.setEnabled(clickable);
+        });
     }
 
-    @OnClick({R.id.handler_btn, R.id.asynctask_btn, R.id.rxjava_btn})
+    @OnClick({R.id.handler_btn, R.id.asynctask_btn, R.id.rxjava_btn, R.id.coroutine_btn})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.handler_btn:
@@ -122,6 +135,11 @@ public class MainActivity extends AppCompatActivity {
                                 rxjavaBtn.setEnabled(true);
                             }
                         });
+                break;
+            case R.id.coroutine_btn:
+                viewModel.startCountDown();
+                break;
+            default:
                 break;
         }
     }
